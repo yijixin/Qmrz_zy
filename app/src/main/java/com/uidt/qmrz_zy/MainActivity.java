@@ -10,6 +10,7 @@ import android.os.Bundle;
 import android.os.Looper;
 import android.provider.MediaStore;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.View;
 import android.widget.RelativeLayout;
 import android.widget.Toast;
@@ -30,6 +31,7 @@ import com.uidt.qmrz_zy.base.BaseActivity;
 import com.uidt.qmrz_zy.mvp.contract.CommonContract;
 import com.uidt.qmrz_zy.mvp.model.CommonModel;
 import com.uidt.qmrz_zy.mvp.presenter.CommonPresenter;
+import com.uidt.qmrz_zy.utils.DialogUtils;
 import com.uidt.qmrz_zy.utils.FileUtil;
 
 import java.io.File;
@@ -65,6 +67,9 @@ public class MainActivity extends BaseActivity<CommonPresenter, CommonModel> imp
 
     @Override
     public void initViews(Bundle savedInstanceState) {
+
+        DialogUtils.getDialogUtils(MainActivity.this).show();
+
         rlGskkgl = findViewById(R.id.rl_main_gskkdgl);
         rlGskkgl.setOnClickListener(this);
         alertDialog = new AlertDialog.Builder(this);
@@ -72,31 +77,6 @@ public class MainActivity extends BaseActivity<CommonPresenter, CommonModel> imp
         checkGalleryPermission();
 
         initAccessTokenWithAkSk();
-
-        //  调用身份证扫描必须加上 intent.putExtra(CameraActivity.KEY_NATIVE_MANUAL, true); 关闭自动初始化和释放本地模型
-        CameraNativeHelper.init(this, OCR.getInstance(this).getLicense(),
-                new CameraNativeHelper.CameraNativeInitCallback() {
-                    @Override
-                    public void onError(int errorCode, Throwable e) {
-                        String msg;
-                        switch (errorCode) {
-                            case CameraView.NATIVE_SOLOAD_FAIL:
-                                msg = "加载so失败，请确保apk中存在ui部分的so";
-                                break;
-                            case CameraView.NATIVE_AUTH_FAIL:
-                                msg = "授权本地质量控制token获取失败";
-                                break;
-                            case CameraView.NATIVE_INIT_FAIL:
-                                msg = "本地质量控制";
-                                break;
-                            default:
-                                msg = String.valueOf(errorCode);
-                        }
-                        Looper.prepare();
-                        Toast.makeText(mContext, "本地质量控制初始化错误，错误原因： " + msg, Toast.LENGTH_SHORT).show();
-                        Looper.loop();
-                    }
-                });
     }
 
     @Override
@@ -109,30 +89,33 @@ public class MainActivity extends BaseActivity<CommonPresenter, CommonModel> imp
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
+
+        DialogUtils.getDialogUtils(MainActivity.this).show();
+
         if (requestCode == REQUEST_CODE_PICK_IMAGE_FRONT && resultCode == Activity.RESULT_OK) {
             Uri uri = data.getData();
             String filePath = getRealPathFromURI(uri);
             recIDCard(IDCardParams.ID_CARD_SIDE_FRONT, filePath);
-        }
-
-        if (requestCode == REQUEST_CODE_PICK_IMAGE_BACK && resultCode == Activity.RESULT_OK) {
+        } else if (requestCode == REQUEST_CODE_PICK_IMAGE_BACK && resultCode == Activity.RESULT_OK) {
             Uri uri = data.getData();
             String filePath = getRealPathFromURI(uri);
             recIDCard(IDCardParams.ID_CARD_SIDE_BACK, filePath);
-        }
-
-        if (requestCode == REQUEST_CODE_CAMERA && resultCode == Activity.RESULT_OK) {
+        } else if (requestCode == REQUEST_CODE_CAMERA && resultCode == Activity.RESULT_OK) {
             if (data != null) {
                 String contentType = data.getStringExtra(CameraActivity.KEY_CONTENT_TYPE);
                 String filePath = FileUtil.getSaveFile(getApplicationContext()).getAbsolutePath();
                 if (!TextUtils.isEmpty(contentType)) {
                     if (CameraActivity.CONTENT_TYPE_ID_CARD_FRONT.equals(contentType)) {
+                        //后置
                         recIDCard(IDCardParams.ID_CARD_SIDE_FRONT, filePath);
                     } else if (CameraActivity.CONTENT_TYPE_ID_CARD_BACK.equals(contentType)) {
+                        //前置
                         recIDCard(IDCardParams.ID_CARD_SIDE_BACK, filePath);
                     }
                 }
             }
+        } else {
+            DialogUtils.getDialogUtils(MainActivity.this).dismiss();
         }
     }
 
@@ -163,13 +146,34 @@ public class MainActivity extends BaseActivity<CommonPresenter, CommonModel> imp
         OCR.getInstance(this).recognizeIDCard(param, new OnResultListener<IDCardResult>() {
             @Override
             public void onResult(IDCardResult result) {
+                DialogUtils.getDialogUtils(MainActivity.this).dismiss();
                 if (result != null) {
-                    alertText("", result.toString());
+                    String resultInfo = result.toString();
+                    if (resultInfo.contains("address") && resultInfo.contains("idNumber")){
+                        int start = resultInfo.indexOf("{");
+                        int end = resultInfo.indexOf("}");
+                        String info = resultInfo.substring(start,end);
+                        String[] infos = info.split(",");
+                        if (infos.length > 4) {
+                            String address = infos[2].substring(9, infos[2].length());
+                            String idNumber = infos[3].substring(10, infos[3].length());
+                            if (TextUtils.isEmpty(address) || TextUtils.isEmpty(idNumber) || address.equals("null")) {
+                                alertText("", "身份证件识别失败！");
+                            } else {
+                                SureInfoActivity.startAction(MainActivity.this,idNumber,address);
+                            }
+                        } else {
+                            alertText("", "身份证件识别失败！");
+                        }
+                    } else {
+                        alertText("", "身份证件识别失败！");
+                    }
                 }
             }
 
             @Override
             public void onError(OCRError error) {
+                DialogUtils.getDialogUtils(MainActivity.this).dismiss();
                 alertText("", error.getMessage());
             }
         });
@@ -184,14 +188,42 @@ public class MainActivity extends BaseActivity<CommonPresenter, CommonModel> imp
             public void onResult(AccessToken result) {
                 String token = result.getAccessToken();
                 hasGotToken = true;
+
+                DialogUtils.getDialogUtils(MainActivity.this).dismiss();
+
+                //  调用身份证扫描必须加上 intent.putExtra(CameraActivity.KEY_NATIVE_MANUAL, true); 关闭自动初始化和释放本地模型
+                CameraNativeHelper.init(MainActivity.this, OCR.getInstance(MainActivity.this).getLicense(),
+                        new CameraNativeHelper.CameraNativeInitCallback() {
+                            @Override
+                            public void onError(int errorCode, Throwable e) {
+                                String msg;
+                                switch (errorCode) {
+                                    case CameraView.NATIVE_SOLOAD_FAIL:
+                                        msg = "加载so失败，请确保apk中存在ui部分的so";
+                                        break;
+                                    case CameraView.NATIVE_AUTH_FAIL:
+                                        msg = "授权本地质量控制token获取失败";
+                                        break;
+                                    case CameraView.NATIVE_INIT_FAIL:
+                                        msg = "本地质量控制";
+                                        break;
+                                    default:
+                                        msg = String.valueOf(errorCode);
+                                }
+                                Looper.prepare();
+                                Toast.makeText(mContext, "本地质量控制初始化错误，错误原因： " + msg, Toast.LENGTH_SHORT).show();
+                                Looper.loop();
+                            }
+                        });
             }
 
             @Override
             public void onError(OCRError error) {
+                DialogUtils.getDialogUtils(MainActivity.this).dismiss();
                 error.printStackTrace();
                 alertText("AK，SK方式获取token失败", error.getMessage());
             }
-        }, getApplicationContext(), "joF3z2xV0y7QNY5ywvzgRLYK", "lFhqepf6NRhZCuLmLvifuDwjUvoZUoMN");
+        }, getApplicationContext(), "MACLGGDMiUrIr0Vcnp373nvG", "q5mvOVYaRedPsdLfTuzLvruyAjNGOqsY");
     }
 
     private boolean checkTokenStatus() {
@@ -202,7 +234,6 @@ public class MainActivity extends BaseActivity<CommonPresenter, CommonModel> imp
     }
 
     private void alertText(final String title, final String message) {
-        if (!TextUtils.isEmpty(title)) {
             this.runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
@@ -214,7 +245,6 @@ public class MainActivity extends BaseActivity<CommonPresenter, CommonModel> imp
                 }
 
             });
-        }
     }
 
     @Override
