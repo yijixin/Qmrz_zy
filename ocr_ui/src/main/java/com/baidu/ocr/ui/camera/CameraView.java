@@ -432,7 +432,7 @@ public class CameraView extends FrameLayout {
                 break;
             case 1:
             default:
-                message = "请将身份证置于取景框内";
+                message = "请将身份证正面置于取景框内";
         }
 
 

@@ -53,7 +53,7 @@ public class MainActivity extends BaseActivity<CommonPresenter, CommonModel> imp
                 .READ_EXTERNAL_STORAGE);
         if (ret != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(MainActivity.this,
-                    new String[]{Manifest.permission.READ_EXTERNAL_STORAGE},
+                    new String[]{Manifest.permission.READ_EXTERNAL_STORAGE,Manifest.permission.WRITE_EXTERNAL_STORAGE},
                     1000);
             return false;
         }
@@ -149,18 +149,24 @@ public class MainActivity extends BaseActivity<CommonPresenter, CommonModel> imp
                 DialogUtils.getDialogUtils(MainActivity.this).dismiss();
                 if (result != null) {
                     String resultInfo = result.toString();
+                    Log.e("==>","resultinfo="+resultInfo);
                     if (resultInfo.contains("address") && resultInfo.contains("idNumber")){
                         int start = resultInfo.indexOf("{");
                         int end = resultInfo.indexOf("}");
                         String info = resultInfo.substring(start,end);
                         String[] infos = info.split(",");
-                        if (infos.length > 4) {
+                        if (infos.length > 7) {
                             String address = infos[2].substring(9, infos[2].length());
                             String idNumber = infos[3].substring(10, infos[3].length());
+                            String name = infos[5].substring(6,infos[5].length());
+                            String gender = infos[6].substring(8,infos[6].length());
+                            String birthday = infos[4].substring(10,infos[4].length());
+                            String ethnic = infos[7].substring(8,infos[7].length());
+                            Log.e("==>","name="+name+",gender="+gender+",birthday="+birthday+",ethnic="+ethnic);
                             if (TextUtils.isEmpty(address) || TextUtils.isEmpty(idNumber) || address.equals("null")) {
                                 alertText("", "身份证件识别失败！");
                             } else {
-                                SureInfoActivity.startAction(MainActivity.this,idNumber,address);
+                                SureInfoActivity.startAction(MainActivity.this,idNumber,address,name,gender,birthday,ethnic);
                             }
                         } else {
                             alertText("", "身份证件识别失败！");
@@ -210,9 +216,7 @@ public class MainActivity extends BaseActivity<CommonPresenter, CommonModel> imp
                                     default:
                                         msg = String.valueOf(errorCode);
                                 }
-                                Looper.prepare();
-                                Toast.makeText(mContext, "本地质量控制初始化错误，错误原因： " + msg, Toast.LENGTH_SHORT).show();
-                                Looper.loop();
+                                alertText("失败", "本地质量控制初始化错误，错误原因： " + msg);
                             }
                         });
             }

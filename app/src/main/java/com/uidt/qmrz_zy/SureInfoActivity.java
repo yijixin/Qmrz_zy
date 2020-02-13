@@ -8,25 +8,31 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.LinearLayout;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import com.uidt.qmrz_zy.base.BaseActivity;
-import com.uidt.qmrz_zy.mvp.contract.CommonContract;
-import com.uidt.qmrz_zy.mvp.model.CommonModel;
-import com.uidt.qmrz_zy.mvp.presenter.CommonPresenter;
+import com.uidt.qmrz_zy.bean.QmkyLevelBean;
+import com.uidt.qmrz_zy.mvp.contract.SureInfoContract;
+import com.uidt.qmrz_zy.mvp.model.SureInfoModel;
+import com.uidt.qmrz_zy.mvp.presenter.SureInfoPresenter;
 import com.uidt.qmrz_zy.utils.DialogUtils;
+import com.uidt.qmrz_zy.utils.InterfaceResultUtils;
 
-public class SureInfoActivity extends BaseActivity<CommonPresenter, CommonModel> implements CommonContract.View, View.OnClickListener {
+public class SureInfoActivity extends BaseActivity<SureInfoPresenter, SureInfoModel> implements SureInfoContract.View, View.OnClickListener {
 
     private Button btnCommit;
     private LinearLayout llBack;
-    private EditText etSfzh,etAddress;
+    private EditText etSfzh, etAddress;
+    private String name, gender, birthday, ethnic;
 
-    public static void startAction(Activity activity,String cardnum,String address) {
-        Intent intent = new Intent(activity,SureInfoActivity.class);
-        intent.putExtra("cardnum",cardnum);
-        intent.putExtra("address",address);
+    public static void startAction(Activity activity, String cardnum, String address, String name, String gender, String birthday, String ethnic) {
+        Intent intent = new Intent(activity, SureInfoActivity.class);
+        intent.putExtra("cardnum", cardnum);
+        intent.putExtra("address", address);
+        intent.putExtra("name", name);
+        intent.putExtra("gender", gender);
+        intent.putExtra("birthday", birthday);
+        intent.putExtra("ethnic", ethnic);
         activity.startActivity(intent);
     }
 
@@ -46,6 +52,11 @@ public class SureInfoActivity extends BaseActivity<CommonPresenter, CommonModel>
 
         String cardNum = getIntent().getStringExtra("cardnum");
         String address = getIntent().getStringExtra("address");
+        name = getIntent().getStringExtra("name");
+        gender = getIntent().getStringExtra("gender");
+        birthday = getIntent().getStringExtra("birthday");
+        ethnic = getIntent().getStringExtra("ethnic");
+
         etSfzh.setText(cardNum);
         etAddress.setText(address);
     }
@@ -69,18 +80,36 @@ public class SureInfoActivity extends BaseActivity<CommonPresenter, CommonModel>
                 if (TextUtils.isEmpty(idNumber) && TextUtils.isEmpty(address)) {
                     Toast.makeText(mContext, "身份证信息和地址信息不能为空！", Toast.LENGTH_SHORT).show();
                 } else {
-//                    ResultActivity.startAction(SureInfoActivity.this,true);
-                    ResultActivity.startAction(SureInfoActivity.this,false);
-                    finish();
-
-//                    DialogUtils.getDialogUtils(SureInfoActivity.this).show();
+                    DialogUtils.getDialogUtils(SureInfoActivity.this).show();
                     //接口调用判断
+                    int sex = 0;
+                    if ("男".equals(gender)) {
+                        sex = 1;
+                    } else if ("女".equals(gender)) {
+                        sex = 2;
+                    }
+                    mPresenter.passlevelInfos(idNumber, address, name, sex, birthday, ethnic);
                 }
                 break;
             case R.id.ll_back_hzinfo:
                 finish();
                 break;
             default:
+        }
+    }
+
+    @Override
+    public void loadPassResult(QmkyLevelBean qmkyLevelBean) {
+        DialogUtils.getDialogUtils(SureInfoActivity.this).dismiss();
+        if (qmkyLevelBean.getStatus() == InterfaceResultUtils.NET_RESULT_OK) {
+            if (qmkyLevelBean.getData().getPassstatus() == 1) {
+                ResultActivity.startAction(SureInfoActivity.this, true);
+            } else {
+                ResultActivity.startAction(SureInfoActivity.this, false);
+            }
+            finish();
+        } else {
+            Toast.makeText(mContext, qmkyLevelBean.getMsg(), Toast.LENGTH_SHORT).show();
         }
     }
 }

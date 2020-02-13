@@ -1,11 +1,9 @@
 package com.uidt.qmrz_zy.base;
 
 
-import io.reactivex.Observable;
-import io.reactivex.ObservableSource;
-import io.reactivex.ObservableTransformer;
-import io.reactivex.android.schedulers.AndroidSchedulers;
-import io.reactivex.schedulers.Schedulers;
+import rx.Observable;
+import rx.android.schedulers.AndroidSchedulers;
+import rx.schedulers.Schedulers;
 
 /**
  * @author Created by yijixin at 2017/11/8
@@ -14,11 +12,11 @@ import io.reactivex.schedulers.Schedulers;
  */
 public class RxSchedulers {
 
-    public static <T> ObservableTransformer<T,T> io_main(){
-        return new ObservableTransformer<T, T>() {
+    public static <T> Observable.Transformer<T,T> io_main(){
+        return new Observable.Transformer<T, T>() {
             @Override
-            public ObservableSource<T> apply(Observable<T> upstream) {
-                return upstream.subscribeOn(Schedulers.io())
+            public Observable<T> call(Observable<T> observable) {
+                return observable.subscribeOn(Schedulers.io())
                         .observeOn(AndroidSchedulers.mainThread());
             }
         };

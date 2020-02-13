@@ -71,8 +71,6 @@ public class ServiceGenerator {
         return retrofit.create(serviceClass);
     }
 
-    private static Interceptor interceptor = null;
-
     public static OkHttpClient.Builder getHttpClient() {
         OkHttpClient client = new OkHttpClient();
         OkHttpClient.Builder builder = client.newBuilder();
@@ -110,7 +108,7 @@ public class ServiceGenerator {
             HostnameVerifier hostnameVerifier = null;
             if (!ConstantsUtils.IP_URL.substring(0, 5).equals("https")) {
 
-            } else if (!ConstantsUtils.IP_URL.equals("https://guas.kingflying.cn:8442")) {
+            } else if (!ConstantsUtils.IP_URL.equals("https://api-dev.uidt.net/archean/ga/qmzy-api/")) {
                 //本地测试用
                 InputStream in = AppAplication.getAppContext().getAssets().open("tomcat.cer");
                 CertificateFactory certificateFactory = CertificateFactory.getInstance("X.509");
@@ -158,7 +156,7 @@ public class ServiceGenerator {
                     .retryOnConnectionFailure(true);
             if (!ConstantsUtils.IP_URL.substring(0, 5).equals("https")) {
                 builder.build();
-            } else if (!ConstantsUtils.IP_URL.equals("https://guas.kingflying.cn:8442")) {
+            } else if (!ConstantsUtils.IP_URL.equals("https://api-dev.uidt.net/archean/ga/qmzy-api/")) {
                 //本地测试用
                 builder.sslSocketFactory(sslContext.getSocketFactory())
                         .hostnameVerifier(new HostnameVerifier() {

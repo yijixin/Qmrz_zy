@@ -20,103 +20,14 @@ import okhttp3.ResponseBody;
 
 public class ApiGetInterfaceParams {
 
-    //获取时间段内可用优惠券
-    public static RequestBody getAvailableTicketNum() {
-        Map<String, Object> params = new HashMap<>();
-        return getRequsetBodyInfo(params);
-    }
-
-    //获取时间段内可用优惠券
-    public static RequestBody getAvailableTicketList(int pageIndex, int pageSize) {
-        Map<String, Object> params = new HashMap<>();
-        params.put("pageIndex", pageIndex);
-        params.put("pageSize", pageSize);
-        return getRequsetBodyInfo(params);
-    }
-
-    //我的优惠券
-    public static RequestBody getMyTicket(int type, int pageIndex, int pageSize) {
-        Map<String, Object> params = new HashMap<>();
-        params.put("type", type);
-        params.put("pageIndex", pageIndex);
-        params.put("pageSize", pageSize);
-        return getRequsetBodyInfo(params);
-    }
-
-    //我的优惠券2
-    public static RequestBody getNewTicketList(String sendBeginTime) {
-        Map<String, Object> params = new HashMap<>();
-        if (!TextUtils.isEmpty(sendBeginTime)) {
-            params.put("sendBeginTime", sendBeginTime);
-        }
-        return getRequsetBodyInfo(params);
-    }
-
-    //验证发送优惠券验证码
-    public static RequestBody getVerifyCouponSms(String actticketid,String code) {
-        Map<String, Object> params = new HashMap<>();
-        params.put("actticketid", actticketid);
-        params.put("code", code);
-        return getRequsetBodyInfo(params);
-    }
-
-    //优惠券消费
-    public static RequestBody getCouponConsume(List<String> actticketids, String billnum) {
-        Map<String, Object> params = new HashMap<>();
-        params.put("actticketidList", actticketids);
-        params.put("billnum", billnum);
-        return getRequsetBodyInfo(params);
-    }
-
-    //发送优惠券验证码
-    public static RequestBody getSendCouponSms(String actticketid) {
-        Map<String, Object> params = new HashMap<>();
-        params.put("actticketid", actticketid);
-        return getRequsetBodyInfo(params);
-    }
-
-    //获取红包
-    public static RequestBody getHbAll(int flag) {
+    public static RequestBody getPassLevel(String personalid,String addr,String name,int gender,String birthdate,String nationality) {
         Map<String,Object> params = new HashMap<>();
-        params.put("pageIndex",1);
-        params.put("pageSize",500);
-        //flag == 0 为 0，1
-        List<Integer> mInfos = new ArrayList<>();
-        if (flag == 1) {
-            // 1 激活成功
-            mInfos.add(1);
-        }
-        params.put("status",mInfos);
-        return getRequsetBodyInfo(params);
-    }
-
-    //查询红包明细
-    public static RequestBody getHbMx(int actionType,int flag) {
-        Map<String,Object> params = new HashMap<>();
-        params.put("pageIndex",1);
-        params.put("pageSize",500);
-        params.put("actiontype",actionType);
-        //flag == 0 为 1,2或者不传 类型:1收入 2支出
-        List<Integer> mInfos = new ArrayList<>();
-        if (flag != 0) {
-            mInfos.add(flag);
-        }
-        params.put("type",mInfos);
-        return getRequsetBodyInfo(params);
-    }
-
-    //使用话费卷
-    public static RequestBody shiyongHfj(List<String> mInfos) {
-        Map<String,Object> params = new HashMap<>();
-        params.put("ticketIds",mInfos);
-        return getRequsetBodyInfo(params);
-    }
-
-    //兑换卷
-    public static RequestBody duihuanJuan(int telTicketNum,int ticketNum) {
-        Map<String,Object> params = new HashMap<>();
-        params.put("telTicketNum",telTicketNum);
-        params.put("ticketNum",ticketNum);
+        params.put("personalid",personalid);
+        params.put("addr",addr);
+        params.put("name",name);
+        params.put("gender",gender);
+        params.put("birthdate",birthdate);
+        params.put("nationality",nationality);
         return getRequsetBodyInfo(params);
     }
 

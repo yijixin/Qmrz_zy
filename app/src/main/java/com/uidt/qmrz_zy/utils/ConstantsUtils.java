@@ -5,8 +5,8 @@ package com.uidt.qmrz_zy.utils;
  */
 public class ConstantsUtils {
 
-    public static String IP_URL = "https://guas.kingflying.cn:8442";
-    public static String BASE_URL = "guas.kingflying.cn";
+    public static String IP_URL = "https://api-dev.uidt.net/archean/ga/qmzy-api/";
+    public static String BASE_URL = "api-dev.uidt.net";
 
     //sessionid
     public static final String SESSION_ID = "session_id";
